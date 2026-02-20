@@ -84,16 +84,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return { code: data.data?.code ?? '', language: data.data?.language };
       }
 
-      if (type === 'DSAGENIE_YOUTUBE') {
-        const res = await fetch(`${base}/api/youtube`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload || {}),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to get YouTube link');
-        return { url: data.data?.url ?? '', videoId: data.data?.videoId ?? null };
-      }
+      // YouTube feature removed
 
       return { error: 'Unknown action' };
     } catch (err) {

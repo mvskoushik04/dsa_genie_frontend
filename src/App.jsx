@@ -6,7 +6,6 @@ const BACKEND_MESSAGE = {
   EXPLANATION: 'DSAGENIE_EXPLANATION',
   PSEUDOCODE: 'DSAGENIE_PSEUDOCODE',
   CODE: 'DSAGENIE_CODE',
-  YOUTUBE: 'DSAGENIE_YOUTUBE',
 };
 
 function loadSession() {
@@ -32,7 +31,6 @@ export default function App() {
   const [view, setView] = useState('explanation');
   const [language, setLanguage] = useState('cpp');
   const [problemInfo, setProblemInfo] = useState(null);
-  const [youtubeVideoId, setYoutubeVideoId] = useState(null);
   const [sessionRestored, setSessionRestored] = useState(false);
 
   const sendToBackend = useCallback((action, payload = {}) => {
@@ -54,7 +52,6 @@ export default function App() {
         setContent(session.content ?? '');
         setView(session.view ?? 'explanation');
         setLanguage(session.language ?? 'cpp');
-        setYoutubeVideoId(session.youtubeVideoId ?? null);
         setError(session.error ?? null);
       }
       setSessionRestored(true);
@@ -73,10 +70,10 @@ export default function App() {
       content: updates.content !== undefined ? updates.content : content,
       view: updates.view !== undefined ? updates.view : view,
       language: updates.language !== undefined ? updates.language : language,
-      youtubeVideoId: updates.youtubeVideoId !== undefined ? updates.youtubeVideoId : youtubeVideoId,
+      // youtube removed
       error: updates.error !== undefined ? updates.error : error,
     });
-  }, [content, view, language, youtubeVideoId, error]);
+  }, [content, view, language, error]);
 
   const loadExplanation = useCallback(() => {
     setView('explanation');
@@ -136,67 +133,32 @@ export default function App() {
     [problemInfo, sendToBackend, persistSession]
   );
 
-  const openYoutube = useCallback(() => {
-    setError(null);
-    setLoading(true);
-    sendToBackend(BACKEND_MESSAGE.YOUTUBE, problemInfo || {})
-      .then((res) => {
-        console.log('YouTube response:', res);
-        const vid = res?.videoId ?? null;
-        console.log('Extracted videoId:', vid);
-        if (vid) {
-          setView('youtube');
-          setYoutubeVideoId(vid);
-          setContent('');
-          persistSession({ view: 'youtube', youtubeVideoId: vid, content: '' });
-        } else if (res?.url) {
-          console.log('No videoId, opening search URL:', res.url);
-          chrome.tabs.create({ url: res.url });
-        }
-      })
-      .catch((e) => {
-        const errMsg = e.message || 'Failed to load YouTube';
-        console.error('YouTube error:', errMsg);
-        setError(errMsg);
-        persistSession({ error: errMsg });
-      })
-      .finally(() => setLoading(false));
-  }, [problemInfo, sendToBackend, persistSession]);
+  // YouTube feature removed
 
   const closeSession = useCallback(() => {
     clearSession();
     setContent('');
     setView('explanation');
     setLanguage('cpp');
-    setYoutubeVideoId(null);
     setError(null);
   }, []);
 
   useEffect(() => {
-    if (sessionRestored && problemInfo && view === 'explanation' && !content && !youtubeVideoId && !error) loadExplanation();
+    if (sessionRestored && problemInfo && view === 'explanation' && !content && !error) loadExplanation();
   }, [sessionRestored, problemInfo]);
 
-  const showContent = view !== 'youtube' && content;
-  const showYoutube = view === 'youtube' && youtubeVideoId;
+  const showContent = !!content;
 
   return (
     <>
       <header style={styles.header}>
         <h1 style={styles.title}>DSAGENIE</h1>
-        <button
-          type="button"
-          onClick={openYoutube}
-          title="Find YouTube video for this problem"
-          style={styles.youtubeBtn}
-          aria-label="YouTube"
-        >
-          <YouTubeIcon />
-        </button>
+        {/* YouTube button removed */}
       </header>
 
       <section style={styles.responseArea}>
-        {loading && !showContent && !showYoutube && <div style={styles.loading}>Loading...</div>}
-        {error && !showContent && !showYoutube && (
+        {loading && !showContent && <div style={styles.loading}>Loading...</div>}
+        {error && !showContent && (
           <div style={styles.errorWrap}>
             <p style={styles.error}>{error}</p>
             <button
@@ -208,23 +170,12 @@ export default function App() {
             </button>
           </div>
         )}
-        {showYoutube && (
-          <div style={styles.embedWrap}>
-            <iframe
-              title="YouTube"
-              src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-              style={styles.iframe}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
         {showContent && (
           <pre style={styles.content}>
             {content}
           </pre>
         )}
-        {!problemInfo && !loading && !error && !content && !youtubeVideoId && (
+        {!problemInfo && !loading && !error && !content && (
           <p style={styles.hint}>Open a LeetCode problem page (e.g. leetcode.com/problems/...) and open this popup again.</p>
         )}
       </section>
@@ -256,17 +207,6 @@ export default function App() {
         </button>
       </footer>
     </>
-  );
-}
-
-function YouTubeIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
-        fill="#FF0000"
-      />
-    </svg>
   );
 }
 
@@ -326,15 +266,6 @@ const styles = {
     color: '#e6b84f',
     letterSpacing: '0.02em',
   },
-  youtubeBtn: {
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 4,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   responseArea: {
     flex: 1,
     minHeight: 180,
@@ -363,22 +294,6 @@ const styles = {
     borderRadius: 6,
     cursor: 'pointer',
     fontSize: 13,
-  },
-  embedWrap: {
-    position: 'relative',
-    width: '100%',
-    paddingBottom: '56.25%',
-    height: 0,
-    overflow: 'hidden',
-    borderRadius: 6,
-  },
-  iframe: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    border: 'none',
   },
   content: {
     margin: 0,
