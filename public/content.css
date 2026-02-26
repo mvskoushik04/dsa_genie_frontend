@@ -1,0 +1,27 @@
+#dsagenie-video-container {
+  transition: opacity 0.3s ease;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);  /* Changed from -100% to 100% */
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+#dsagenie-video-container iframe {
+  max-width: 100%;
+}
+
+#dsagenie-video-container button:hover {
+  color: #fff !important;
+}
+
+#dsagenie-video-container .dsagenie-drag-handle {
+  cursor: move;
+}
